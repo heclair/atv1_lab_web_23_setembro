@@ -56,18 +56,19 @@ class ClienteController {
   async delete(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-
+  
       const clienteRemovido = await Cliente.findByIdAndDelete(id);
-
+  
       if (!clienteRemovido) {
         return res.status(404).json({ message: 'Cliente não encontrado' });
       }
-
+  
       return res.status(200).json({ message: 'Cliente removido com sucesso' });
     } catch (error) {
       return res.status(500).json({ message: 'Erro ao remover cliente', error });
     }
   }
+  
 }
 
 export default new ClienteController();

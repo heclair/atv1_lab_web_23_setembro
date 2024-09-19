@@ -5,8 +5,7 @@ const router = Router();
 
 router.get("/", controller.list);
 router.post("/", controller.create);
-router.delete("/", controller.delete);
-router.put("/", controller.update);
-
+router.delete("/:id", controller.delete); // Adicione :id para a rota de delete
+router.put("/:id", controller.update); // Adicione :id para a rota de update
 
 export default router;

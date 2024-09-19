@@ -1,5 +1,5 @@
 // src/components/ClienteForm.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface Cliente {
     nome: string;
@@ -12,18 +12,46 @@ const ClienteForm: React.FC = () => {
     const [nome, setNome] = useState<string>("");
     const [email, setEmail] = useState<string>("");
 
-    const handleCadastrar = () => {
+    const handleCadastrar = async () => {
         if (nome && email) {
-            const novoCliente = {
-                nome,
-                email,
-                status: "ATIVO",
-            };
-            setClientes([...clientes, novoCliente]);
+          const novoCliente = { nome, email, status: "ATIVO" };
+          try {
+            const response = await fetch('http://localhost:5000/user', { // Verifique se a porta está correta
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(novoCliente),
+            });
+      
+            if (!response.ok) {
+              throw new Error('Erro ao cadastrar cliente');
+            }
+      
+            const clienteCadastrado = await response.json();
+            setClientes([...clientes, clienteCadastrado]); // Adiciona o novo cliente à lista
             setNome("");
             setEmail("");
+          } catch (error) {
+            console.error(error);
+            // Adicione lógica para mostrar mensagem de erro ao usuário
+          }
         }
-    };
+      };
+      
+      // Listar clientes quando o componente for montado
+      useEffect(() => {
+        const fetchClientes = async () => {
+          try {
+            const response = await fetch('http://localhost:3010/user');
+            const clientesList = await response.json();
+            setClientes(clientesList);
+          } catch (error) {
+            console.error('Erro ao buscar clientes:', error);
+          }
+        };
+      
+        fetchClientes();
+      }, []);
+      
 
     const handleDelete = (index: number) => {
         const novosClientes = clientes.filter((_, i) => i !== index);
