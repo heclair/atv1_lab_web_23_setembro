@@ -3,22 +3,20 @@ import Cliente from '../models/ClienteModel'; // Supondo que o modelo esteja nes
 
 class ClienteController {
   // Criar um novo cliente
-  async create(req: Request, res: Response): Promise<Response> {
-    try {
-      const { nome, email, status } = req.body;
+  async create(req: Request, res: Response): Promise<Response> { 
+    try {console.log("passou")
+        const { nome, email, status } = req.body;
 
-      const cliente = new Cliente({
-        nome,
-        email,
-        status
-      });
+        const cliente = new Cliente({ nome, email, status });
+        const novoCliente = await cliente.save();
 
-      const novoCliente = await cliente.save();
-      return res.status(201).json(novoCliente);
-    } catch (error) {
-      return res.status(500).json({ message: 'Erro ao criar cliente', error });
+        return res.status(201).json(novoCliente);
+    } catch (error) {console.log("passou")
+        console.error('Erro ao criar cliente:', error);
+        return res.status(500).json({ message: 'Erro ao criar cliente', error });
     }
-  }
+}
+
 
   // Listar todos os clientes
   async list(req: Request, res: Response): Promise<Response> {
