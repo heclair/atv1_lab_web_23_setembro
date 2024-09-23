@@ -5,12 +5,14 @@ interface Cliente {
     nome: string;
     email: string;
     status: string;
+    _id: string;
 }
 
 const ClienteForm: React.FC = () => {
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [nome, setNome] = useState<string>("");
     const [email, setEmail] = useState<string>("");
+    const [clienteId, setClienteId] = useState<string | null>(null);
 
     const handleCadastrar = async () => {
         if (nome && email) {
@@ -54,9 +56,62 @@ const ClienteForm: React.FC = () => {
       }, []);
       
 
-    const handleDelete = (index: number) => {
-        const novosClientes = clientes.filter((_, i) => i !== index);
-        setClientes(novosClientes);
+      const handleDelete = async (id: string, index: number) => {
+        try {
+            const response = await fetch(`http://localhost:3010/user/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao deletar cliente');
+            }
+
+            // Remove o cliente da lista localmente, após a confirmação do banco de dados
+            const novosClientes = clientes.filter((_, i) => i !== index);
+            setClientes(novosClientes);
+        } catch (error) {
+            console.error('Erro ao deletar cliente:', error);
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (clienteId && nome && email) {
+            const clienteAtualizado = { nome, email };
+
+            try {
+                const response = await fetch(`http://localhost:3010/user/${clienteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(clienteAtualizado),
+                });
+
+                if (!response.ok) {
+                    const errorResponse = await response.json();
+                    throw new Error(errorResponse.message || 'Erro ao atualizar cliente');
+                }
+
+                const clienteAtualizadoResponse = await response.json();
+
+                // Atualizar a lista de clientes no estado
+                setClientes(clientes.map(cliente =>
+                    cliente._id === clienteId ? clienteAtualizadoResponse : cliente
+                ));
+
+                // Limpar campos após a edição
+                setClienteId(null);
+                setNome("");
+                setEmail("");
+
+            } catch (error) {
+                console.error('Erro ao atualizar cliente:', error);
+            }
+        }
+    };
+
+    const handleEdit = (cliente: Cliente, id: string) => {
+        setNome(cliente.nome);
+        setEmail(cliente.email);
+        setClienteId(id);
     };
 
     return (
@@ -80,23 +135,23 @@ const ClienteForm: React.FC = () => {
                     style={styles.input}
                 />
 
-                <button onClick={handleCadastrar} style={styles.button}>
-                    Cadastrar
+<button onClick={clienteId ? handleUpdate : handleCadastrar} style={styles.button}>
+                    {clienteId ? 'Atualizar' : 'Cadastrar'}
                 </button>
             </div>
 
             {clientes.map((cliente, index) => (
-                <div key={index} style={styles.card}>
+                <div key={cliente._id} style={styles.card}>
                     <p>
                         <strong>Nome:</strong> {cliente.nome}
                     </p>
                     <p>
                         <strong>Email:</strong> {cliente.email}
                     </p>
-                    <p>
-                        <strong>Status:</strong> {cliente.status}
-                    </p>
-                    <button onClick={() => handleDelete(index)} style={styles.deleteButton}>
+                    <button onClick={() => handleEdit(cliente, cliente._id)} style={styles.editButton}>
+                        &#9998;
+                    </button>
+                    <button onClick={() => handleDelete(cliente._id, index)} style={styles.deleteButton}>
                         &#128465;
                     </button>
                 </div>
@@ -154,6 +209,16 @@ const styles = {
         right: "10px",
         backgroundColor: "transparent",
         color: "red",
+        border: "none",
+        fontSize: "18px",
+        cursor: "pointer",
+    },
+    editButton: {
+        position: "absolute" as const,
+        top: "10px",
+        right: "40px",
+        backgroundColor: "transparent",
+        color: "black",
         border: "none",
         fontSize: "18px",
         cursor: "pointer",
